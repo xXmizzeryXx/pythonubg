@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python — Eclipse Suite</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --text-primary: rgba(255,255,255,0.92);
+    --text-secondary: rgba(255,255,255,0.45);
+    --text-muted: rgba(255,255,255,0.22);
+  }
+
+  html, body {
+    height: 100%;
+    background: #080808;
+    color: var(--text-primary);
+    font-family: 'Sora', sans-serif;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 20% 30%, rgba(65,65,65,0.4) 0%, transparent 65%),
+      radial-gradient(ellipse 50% 60% at 80% 75%, rgba(45,45,45,0.4) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.4s;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 48px, rgba(255,255,255,0.016) 48px, rgba(255,255,255,0.016) 49px),
+      repeating-linear-gradient(90deg, transparent, transparent 48px, rgba(255,255,255,0.016) 48px, rgba(255,255,255,0.016) 49px);
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.4s;
+  }
+
+  body.no-grid::after { opacity: 0; }
+  body.no-animations * { animation: none !important; transition: none !important; }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 10vw;
+  }
+
+  .main-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+    animation: fadeIn 0.55s cubic-bezier(0.4,0,0.2,1) both;
+  }
+
+  .logo-block { display: flex; flex-direction: column; gap: 5px; }
+
+  .logo-wordmark {
+    font-family: 'Space Mono', monospace;
+    font-size: 52px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .logo-suite {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .url-bar-wrap {
+    width: 480px;
+    max-width: 80vw;
+    position: relative;
+  }
+
+  .url-bar {
+    width: 100%;
+    background: rgba(255,255,255,0.06);
+    border: none;
+    border-radius: 100px;
+    padding: 13px 22px 13px 46px;
+    color: var(--text-primary);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    transition: all 0.25s ease;
+    caret-color: rgba(255,255,255,0.8);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .url-bar::placeholder { color: var(--text-muted); }
+
+  .url-bar:focus {
+    background: rgba(255,255,255,0.09);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2), 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1);
+  }
+
+  .url-icon {
+    position: absolute;
+    left: 17px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 13px;
+    pointer-events: none;
+    transition: color 0.2s;
+  }
+
+  .url-bar-wrap:focus-within .url-icon { color: rgba(255,255,255,0.4); }
+
+  .bottom-bar {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 100px;
+    padding: 6px;
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.2);
+    animation: slideUp 0.5s cubic-bezier(0.4,0,0.2,1) 0.15s both;
+    z-index: 10;
+  }
+
+  .dock-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 100px;
+    color: var(--text-secondary);
+    font-family: 'Sora', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .dock-btn i { font-size: 13px; }
+  .dock-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+  .dock-btn:active { transform: scale(0.97); }
+
+  .footer-credit {
+    position: fixed;
+    bottom: 28px;
+    right: 10vw;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.04em;
+    z-index: 10;
+  }
+
+  .footer-credit a { color: rgba(255,255,255,0.28); text-decoration: none; transition: color 0.2s; }
+  .footer-credit a:hover { color: rgba(255,255,255,0.55); }
+
+  /* ── Overlays ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .overlay.open { opacity: 1; pointer-events: all; }
+
+  .panel {
+    background: rgba(12,12,12,0.85);
+    border-radius: 26px;
+    backdrop-filter: blur(60px) saturate(180%);
+    -webkit-backdrop-filter: blur(60px) saturate(180%);
+    box-shadow: 0 40px 100px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.3);
+    overflow: hidden;
+    transform: scale(0.95) translateY(12px);
+    transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 45%);
+    pointer-events: none;
+  }
+
+  .overlay.open .panel { transform: scale(1) translateY(0); }
+
+  .settings-panel { width: 440px; max-width: calc(100vw - 48px); }
+
+  .games-panel {
+    width: 700px;
+    max-width: calc(100vw - 48px);
+    height: 75vh;
+    max-height: 600px;
+  }
+
+  /* ── Browser Modal ── */
+  .browser-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+
+  .browser-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .browser-panel {
+    width: calc(100vw - 48px);
+    height: calc(100vh - 48px);
+    max-width: 1300px;
+    max-height: 860px;
+    background: rgba(10,10,10,0.92);
+    border-radius: 20px;
+    backdrop-filter: blur(60px) saturate(200%);
+    -webkit-backdrop-filter: blur(60px) saturate(200%);
+    box-shadow: 0 48px 120px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: scale(0.96) translateY(14px);
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+  }
+
+  .browser-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .browser-overlay.open .browser-panel {
+    transform: scale(1) translateY(0);
+  }
+
+  /* Chrome bar */
+  .browser-chrome {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.025);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .chrome-controls {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .chrome-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+  }
+
+  .chrome-dot:hover { opacity: 0.75; }
+  .chrome-dot.close  { background: rgba(255,96,96,0.7); }
+  .chrome-dot.min    { background: rgba(255,189,46,0.7); }
+  .chrome-dot.max    { background: rgba(40,200,120,0.7); }
+
+  .chrome-nav {
+    display: flex;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .nav-btn {
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 11px;
+    transition: all 0.15s;
+  }
+
+  .nav-btn:hover:not(:disabled) {
+    background: rgba(255,255,255,0.07);
+    color: var(--text-secondary);
+  }
+
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+  .chrome-url-wrap {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+  }
+
+  .chrome-url {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 6px 12px 6px 32px;
+    color: var(--text-primary);
+    font-family: 'Space Mono', monospace;
+    font-size: 11.5px;
+    outline: none;
+    transition: all 0.2s;
+    caret-color: rgba(255,255,255,0.8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chrome-url:focus {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.15);
+  }
+
+  .chrome-url-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  .chrome-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .chrome-action-btn {
+    width: 30px;
+    height: 28px;
+    background: transparent;
+    border: none;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 11px;
+    transition: all 0.15s;
+  }
+
+  .chrome-action-btn:hover {
+    background: rgba(255,255,255,0.07);
+    color: var(--text-secondary);
+  }
+
+  .chrome-action-btn.close-browser {
+    color: rgba(255,96,96,0.6);
+  }
+
+  .chrome-action-btn.close-browser:hover {
+    background: rgba(255,96,96,0.12);
+    color: rgba(255,96,96,0.9);
+  }
+
+  /* iframe area */
+  .browser-viewport {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .browser-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+    background: #fff;
+  }
+
+  /* Loading bar */
+  .browser-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, rgba(180,180,180,0.9), rgba(255,255,255,0.5));
+    border-radius: 0 2px 2px 0;
+    width: 0%;
+    transition: width 0.3s ease, opacity 0.3s ease;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .browser-loader.loading {
+    animation: loadProgress 1.8s ease-out forwards;
+  }
+
+  .browser-loader.done {
+    width: 100% !important;
+    opacity: 0;
+    transition: width 0.2s ease, opacity 0.5s ease 0.2s;
+  }
+
+  /* Blocked / error screen */
+  .browser-blocked {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: rgba(8,8,8,0.95);
+    z-index: 5;
+  }
+
+  .browser-blocked.show { display: flex; }
+
+  .blocked-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: var(--text-muted);
+  }
+
+  .blocked-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .blocked-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    max-width: 340px;
+    line-height: 1.6;
+  }
+
+  .blocked-open-btn {
+    margin-top: 4px;
+    padding: 8px 20px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 100px;
+    color: var(--text-secondary);
+    font-family: 'Sora', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .blocked-open-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--text-primary);
+  }
+
+  /* Status bar */
+  .browser-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 14px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.015);
+    position: relative;
+    z-index: 2;
+  }
+
+  .status-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    max-width: 60%;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(40,200,120,0.7);
+    flex-shrink: 0;
+  }
+
+  .status-dot.loading { background: rgba(255,189,46,0.7); animation: pulse 1s infinite; }
+  .status-dot.error   { background: rgba(255,96,96,0.7); }
+
+  .status-right {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+
+  /* ── Shared panel parts ── */
+  .p-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 22px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .p-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: capitalize;
+  }
+
+  .p-title i { color: var(--text-muted); font-size: 13px; }
+
+  .p-header-right { display: flex; align-items: center; gap: 8px; }
+
+  .close-btn {
+    width: 26px;
+    height: 26px;
+    background: rgba(255,255,255,0.06);
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 11px;
+    transition: all 0.2s;
+  }
+
+  .close-btn:hover { background: rgba(255,255,255,0.12); color: var(--text-primary); }
+
+  .s-body { padding: 6px 0 10px; overflow-y: auto; position: relative; z-index: 2; }
+
+  .s-label {
+    padding: 12px 22px 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .s-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 22px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .s-row:hover { background: rgba(255,255,255,0.04); }
+  .s-row-left { display: flex; align-items: center; gap: 11px; }
+
+  .s-row-ico {
+    width: 28px;
+    height: 28px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+  }
+
+  .s-row-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+  .s-row-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+  .toggle {
+    width: 36px;
+    height: 20px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 100px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .toggle.on { background: rgba(200,200,200,0.3); }
+
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 16px; height: 16px;
+    background: rgba(255,255,255,0.55);
+    border-radius: 50%;
+    transition: transform 0.2s cubic-bezier(0.4,0,0.2,1), background 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  }
+
+  .toggle.on::after { transform: translateX(16px); background: #fff; }
+
+  .s-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 5px 22px; }
+
+  .p-footer {
+    padding: 12px 22px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .p-credit { font-size: 11px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; }
+  .p-credit a { color: rgba(255,255,255,0.28); text-decoration: none; transition: color 0.2s; }
+  .p-credit a:hover { color: rgba(255,255,255,0.55); }
+
+  .p-version {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.05);
+    border-radius: 100px;
+    padding: 3px 10px;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(12px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  @keyframes loadProgress {
+    0%   { width: 0%; }
+    20%  { width: 35%; }
+    50%  { width: 62%; }
+    80%  { width: 82%; }
+    100% { width: 92%; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="main-content">
+    <div class="logo-block">
+      <div class="logo-wordmark">python</div>
+      <div class="logo-suite">Eclipse Suite</div>
+    </div>
+    <div class="url-bar-wrap">
+      <i class="fa-solid fa-magnifying-glass url-icon"></i>
+      <input class="url-bar" type="text" id="urlInput" placeholder="Search or enter URL..." autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+</div>
+
+<div class="bottom-bar">
+  <button class="dock-btn" onclick="openPanel('games')">
+    <i class="fa-solid fa-gamepad"></i>
+    Games
+  </button>
+  <button class="dock-btn" onclick="openPanel('settings')">
+    <i class="fa-solid fa-gear"></i>
+    Settings
+  </button>
+</div>
+
+<div class="footer-credit">
+  <i class="fa-brands fa-github"></i>
+  <a href="https://github.com/xXmizzeryXx/" target="_blank">Mizzery</a>
+  · Eclipse Suite
+</div>
+
+<!-- Main overlay (games + settings) -->
+<div class="overlay" id="overlay" onclick="handleOverlay(event)">
+
+  <div class="panel games-panel" id="gamesPanel" style="display:none;">
+    <div class="p-header">
+      <div class="p-title">
+        <i class="fa-solid fa-gamepad"></i>
+        Games
+      </div>
+      <div class="p-header-right">
+        <div class="close-btn" onclick="closePanel()"><i class="fa-solid fa-xmark"></i></div>
+      </div>
+    </div>
+    <div style="flex:1;overflow-y:auto;position:relative;z-index:2;">
+      <div id="games"></div>
+    </div>
+    <div class="p-footer">
+      <div class="p-credit">
+        <i class="fa-brands fa-github"></i>
+        Built by <a href="https://github.com/xXmizzeryXx/" target="_blank">&nbsp;Mizzery</a>
+      </div>
+      <div class="p-version">Eclipse · Python</div>
+    </div>
+  </div>
+
+  <div class="panel settings-panel" id="settingsPanel" style="display:none;">
+    <div class="p-header">
+      <div class="p-title">
+        <i class="fa-solid fa-gear"></i>
+        Settings
+      </div>
+      <div class="close-btn" onclick="closePanel()"><i class="fa-solid fa-xmark"></i></div>
+    </div>
+    <div class="s-body">
+      <div class="s-label">Appearance</div>
+      <div class="s-row" onclick="toggleSetting(this, 'glassmorphism')">
+        <div class="s-row-left">
+          <div class="s-row-ico"><i class="fa-solid fa-droplet"></i></div>
+          <div>
+            <div class="s-row-name">Heavy Glassmorphism</div>
+            <div class="s-row-sub">Maximum blur and transparency</div>
+          </div>
+        </div>
+        <div class="toggle on" id="toggle-glassmorphism"></div>
+      </div>
+      <div class="s-row" onclick="toggleSetting(this, 'grid')">
+        <div class="s-row-left">
+          <div class="s-row-ico"><i class="fa-solid fa-table-cells-large"></i></div>
+          <div>
+            <div class="s-row-name">Grid Overlay</div>
+            <div class="s-row-sub">Subtle grid lines on background</div>
+          </div>
+        </div>
+        <div class="toggle on" id="toggle-grid"></div>
+      </div>
+      <div class="s-row" onclick="toggleSetting(this, 'animations')">
+        <div class="s-row-left">
+          <div class="s-row-ico"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+          <div>
+            <div class="s-row-name">Animations</div>
+            <div class="s-row-sub">Entrance and hover effects</div>
+          </div>
+        </div>
+        <div class="toggle on" id="toggle-animations"></div>
+      </div>
+      <div class="s-divider"></div>
+      <div class="s-label">General</div>
+      <div class="s-row" onclick="toggleSetting(this, 'safesearch')">
+        <div class="s-row-left">
+          <div class="s-row-ico"><i class="fa-solid fa-shield-halved"></i></div>
+          <div>
+            <div class="s-row-name">Safe Search</div>
+            <div class="s-row-sub">Filter search results</div>
+          </div>
+        </div>
+        <div class="toggle on" id="toggle-safesearch"></div>
+      </div>
+      <div class="s-row" onclick="toggleSetting(this, 'sounds')">
+        <div class="s-row-left">
+          <div class="s-row-ico"><i class="fa-solid fa-volume-high"></i></div>
+          <div>
+            <div class="s-row-name">Sound Effects</div>
+            <div class="s-row-sub">UI interaction sounds</div>
+          </div>
+        </div>
+        <div class="toggle" id="toggle-sounds"></div>
+      </div>
+      <div class="s-divider"></div>
+      <div class="s-label">Suite</div>
+      <div class="s-row" onclick="window.open('https://github.com/xXmizzeryXx/','_blank')">
+        <div class="s-row-left">
+          <div class="s-row-ico"><i class="fa-brands fa-github"></i></div>
+          <div>
+            <div class="s-row-name">GitHub — Mizzery</div>
+            <div class="s-row-sub">Source code and contributions</div>
+          </div>
+        </div>
+        <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:11px;color:var(--text-muted);"></i>
+      </div>
+    </div>
+    <div class="p-footer">
+      <div class="p-credit">
+        <i class="fa-brands fa-github"></i>
+        Built by <a href="https://github.com/xXmizzeryXx/" target="_blank">&nbsp;Mizzery</a>
+      </div>
+      <div class="p-version">v1.0.0 · Python</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Browser Modal ── -->
+<div class="browser-overlay" id="browserOverlay">
+  <div class="browser-panel" id="browserPanel">
+
+    <!-- Chrome bar -->
+    <div class="browser-chrome">
+      <div class="chrome-controls">
+        <div class="chrome-dot close"  onclick="closeBrowser()" title="Close"></div>
+        <div class="chrome-dot min"    onclick="closeBrowser()" title="Minimise"></div>
+        <div class="chrome-dot max"    title="Maximise"></div>
+      </div>
+
+      <div class="chrome-nav">
+        <button class="nav-btn" id="backBtn"    onclick="browserBack()"    disabled title="Back">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button class="nav-btn" id="forwardBtn" onclick="browserForward()" disabled title="Forward">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+        <button class="nav-btn" id="refreshBtn" onclick="browserRefresh()" title="Refresh">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+      </div>
+
+      <div class="chrome-url-wrap">
+        <i class="fa-solid fa-globe chrome-url-icon" id="urlIcon"></i>
+        <input class="chrome-url" type="text" id="chromeUrl" spellcheck="false"
+               autocomplete="off" placeholder="Search or enter URL…"
+               onkeydown="handleChromeUrlKey(event)">
+      </div>
+
+      <div class="chrome-actions">
+        <button class="chrome-action-btn" onclick="openInNewTab()" title="Open in new tab">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </button>
+        <button class="chrome-action-btn close-browser" onclick="closeBrowser()" title="Close browser">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Viewport -->
+    <div class="browser-viewport">
+      <div class="browser-loader" id="browserLoader"></div>
+      <iframe class="browser-iframe" id="browserIframe"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
+              allow="autoplay; fullscreen"
+              referrerpolicy="no-referrer"></iframe>
+      <div class="browser-blocked" id="browserBlocked">
+        <div class="blocked-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="blocked-title">Page blocked</div>
+        <div class="blocked-sub" id="blockedMessage">
+          This page cannot be displayed inside the browser. You can open it in a new tab instead.
+        </div>
+        <button class="blocked-open-btn" id="blockedOpenBtn" onclick="openInNewTab()">
+          Open in new tab <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px;margin-left:4px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="browser-status">
+      <div class="status-left">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Ready</span>
+      </div>
+      <div class="status-right" id="statusRight">Eclipse · Python</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* ─────────────────────────────────────────────────────────
+     Panel logic (games / settings)
+  ───────────────────────────────────────────────────────── */
+  let currentPanel = null;
+  let luminReady   = false;
+
+  function openPanel(which) {
+    const gp = document.getElementById('gamesPanel');
+    const sp = document.getElementById('settingsPanel');
+    gp.style.display = 'none';
+    sp.style.display = 'none';
+    if (which === 'games') {
+      gp.style.display = 'flex';
+    } else {
+      sp.style.display = 'flex';
+      syncSettingsUI();
+    }
+    currentPanel = which;
+    document.getElementById('overlay').classList.add('open');
+    if (which === 'games' && !luminReady && window._luminLoaded) {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        Lumin.init({ container: '#games', theme: 'dark', columns: 5, rows: 4, gamesPerPage: 40 });
+        luminReady = true;
+      }));
+    }
+  }
+
+  function closePanel() {
+    document.getElementById('overlay').classList.remove('open');
+    currentPanel = null;
+  }
+
+  function handleOverlay(e) {
+    if (e.target === document.getElementById('overlay')) closePanel();
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     Settings
+  ───────────────────────────────────────────────────────── */
+  const SETTINGS_DEFAULTS = {
+    glassmorphism: true,
+    grid: true,
+    animations: true,
+    safesearch: true,
+    sounds: false
+  };
+
+  let settings = Object.assign({}, SETTINGS_DEFAULTS);
+
+  function loadSettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('eclipse-settings') || '{}');
+      settings = Object.assign({}, SETTINGS_DEFAULTS, saved);
+    } catch(e) { settings = Object.assign({}, SETTINGS_DEFAULTS); }
+    applySettings();
+  }
+
+  function saveSettings() {
+    try { localStorage.setItem('eclipse-settings', JSON.stringify(settings)); } catch(e) {}
+  }
+
+  function applySettings() {
+    document.body.classList.toggle('no-grid', !settings.grid);
+    document.body.classList.toggle('no-animations', !settings.animations);
+    const panels = document.querySelectorAll('.panel, .bottom-bar, .url-bar, .browser-panel');
+    panels.forEach(p => {
+      p.style.backdropFilter = settings.glassmorphism ? '' : 'none';
+      p.style.webkitBackdropFilter = settings.glassmorphism ? '' : 'none';
+    });
+  }
+
+  function syncSettingsUI() {
+    Object.keys(settings).forEach(key => {
+      const toggle = document.getElementById('toggle-' + key);
+      if (toggle) toggle.classList.toggle('on', !!settings[key]);
+    });
+  }
+
+  function toggleSetting(row, key) {
+    settings[key] = !settings[key];
+    const toggle = row.querySelector('.toggle');
+    if (toggle) toggle.classList.toggle('on', settings[key]);
+    saveSettings();
+    applySettings();
+    playSound('toggle');
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     Sound effects
+  ───────────────────────────────────────────────────────── */
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  let _actx = null;
+
+  function getACtx() {
+    if (!_actx) _actx = new AudioCtx();
+    return _actx;
+  }
+
+  function playSound(type) {
+    if (!settings.sounds) return;
+    try {
+      const ctx = getACtx();
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      if (type === 'open') {
+        osc.frequency.setValueAtTime(520, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(720, ctx.currentTime + 0.12);
+      } else if (type === 'close') {
+        osc.frequency.setValueAtTime(620, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(380, ctx.currentTime + 0.12);
+      } else {
+        osc.frequency.setValueAtTime(660, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(800, ctx.currentTime + 0.07);
+      }
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
+      osc.type = 'sine';
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.15);
+    } catch(e) {}
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     URL / navigate helpers
+  ───────────────────────────────────────────────────────── */
+  const FLUX_BASE = 'https://flux-worker.eclipseservice.workers.dev';
+
+  function encodeUrl(url) {
+    return btoa(unescape(encodeURIComponent(url)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function proxyUrl(url) {
+    return FLUX_BASE + '/fetch/' + encodeUrl(url);
+  }
+
+  function resolveUrl(val) {
+    if (/^https?:\/\//.test(val)) return val;
+    if (val.includes('.') && !val.includes(' ')) return 'https://' + val;
+    const safe = settings.safesearch ? '&safe=active' : '';
+    return 'https://www.google.com/search?q=' + encodeURIComponent(val) + safe;
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     Browser modal
+  ───────────────────────────────────────────────────────── */
+  let browserHistory   = [];
+  let browserHistoryIdx = -1;
+  let currentRawUrl    = '';
+  let loadTimer        = null;
+
+  function openBrowser(rawUrl) {
+    const url        = resolveUrl(rawUrl);
+    const proxied    = proxyUrl(url);
+    currentRawUrl    = url;
+
+    // Reset history for a fresh navigation from the homepage bar
+    browserHistory    = [proxied];
+    browserHistoryIdx = 0;
+
+    _loadInFrame(proxied, url);
+
+    document.getElementById('browserOverlay').classList.add('open');
+    playSound('open');
+  }
+
+  function _loadInFrame(proxied, displayUrl) {
+    const iframe  = document.getElementById('browserIframe');
+    const loader  = document.getElementById('browserLoader');
+    const blocked = document.getElementById('browserBlocked');
+    const urlBar  = document.getElementById('chromeUrl');
+    const icon    = document.getElementById('urlIcon');
+    const dot     = document.getElementById('statusDot');
+    const statusT = document.getElementById('statusText');
+
+    // Hide blocked screen
+    blocked.classList.remove('show');
+    iframe.style.display = 'block';
+
+    // Update address bar
+    urlBar.value = displayUrl || proxied;
+
+    // Loading state
+    dot.className   = 'status-dot loading';
+    statusT.textContent = 'Loading…';
+
+    loader.classList.remove('done');
+    loader.classList.add('loading');
+    loader.style.width = '0%';
+
+    if (loadTimer) clearTimeout(loadTimer);
+
+    // Set iframe src
+    iframe.src = proxied;
+
+    // Listen for load
+    iframe.onload = () => {
+      loader.classList.remove('loading');
+      loader.classList.add('done');
+      dot.className   = 'status-dot';
+      statusT.textContent = displayUrl || proxied;
+      // Try to read the title (will fail cross-origin, that's fine)
+      try {
+        const t = iframe.contentDocument && iframe.contentDocument.title;
+        if (t) document.getElementById('statusRight').textContent = t;
+      } catch(e) {}
+      updateNavBtns();
+    };
+
+    iframe.onerror = () => {
+      showBlocked('Could not load the page. The site may be blocking embeds or the proxy may be unavailable.');
+    };
+
+    // Fallback timeout — if the proxy is blocking, the iframe won't fire onload reliably
+    loadTimer = setTimeout(() => {
+      if (dot.classList.contains('loading')) {
+        dot.className   = 'status-dot';
+        statusT.textContent = displayUrl || proxied;
+        loader.classList.remove('loading');
+        loader.classList.add('done');
+      }
+    }, 12000);
+
+    updateNavBtns();
+  }
+
+  function showBlocked(msg) {
+    const blocked = document.getElementById('browserBlocked');
+    const iframe  = document.getElementById('browserIframe');
+    const dot     = document.getElementById('statusDot');
+    const statusT = document.getElementById('statusText');
+    const loader  = document.getElementById('browserLoader');
+
+    iframe.style.display = 'none';
+    blocked.classList.add('show');
+    document.getElementById('blockedMessage').textContent = msg || 'This page cannot be displayed in the browser.';
+
+    dot.className = 'status-dot error';
+    statusT.textContent = 'Blocked';
+
+    loader.classList.remove('loading');
+    loader.classList.add('done');
+  }
+
+  function closeBrowser() {
+    const overlay = document.getElementById('browserOverlay');
+    const iframe  = document.getElementById('browserIframe');
+    overlay.classList.remove('open');
+    playSound('close');
+    // Defer src clear so the close animation runs
+    setTimeout(() => {
+      iframe.src = 'about:blank';
+      document.getElementById('browserBlocked').classList.remove('show');
+      iframe.style.display = 'block';
+      document.getElementById('statusRight').textContent = 'Eclipse · Python';
+    }, 350);
+  }
+
+  function browserBack() {
+    if (browserHistoryIdx <= 0) return;
+    browserHistoryIdx--;
+    const proxied = browserHistory[browserHistoryIdx];
+    _loadInFrame(proxied, proxied);
+  }
+
+  function browserForward() {
+    if (browserHistoryIdx >= browserHistory.length - 1) return;
+    browserHistoryIdx++;
+    const proxied = browserHistory[browserHistoryIdx];
+    _loadInFrame(proxied, proxied);
+  }
+
+  function browserRefresh() {
+    const iframe = document.getElementById('browserIframe');
+    const cur    = iframe.src;
+    if (cur && cur !== 'about:blank') {
+      _loadInFrame(cur, document.getElementById('chromeUrl').value);
+    }
+  }
+
+  function updateNavBtns() {
+    document.getElementById('backBtn').disabled    = browserHistoryIdx <= 0;
+    document.getElementById('forwardBtn').disabled = browserHistoryIdx >= browserHistory.length - 1;
+  }
+
+  function openInNewTab() {
+    const url = document.getElementById('chromeUrl').value;
+    window.open(url, '_blank');
+  }
+
+  function handleChromeUrlKey(e) {
+    if (e.key !== 'Enter') return;
+    const val     = e.target.value.trim();
+    if (!val) return;
+    const url     = resolveUrl(val);
+    const proxied = proxyUrl(url);
+    currentRawUrl = url;
+
+    // Push to history
+    browserHistory    = browserHistory.slice(0, browserHistoryIdx + 1);
+    browserHistory.push(proxied);
+    browserHistoryIdx = browserHistory.length - 1;
+
+    _loadInFrame(proxied, url);
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     Homepage URL bar
+  ───────────────────────────────────────────────────────── */
+  document.getElementById('urlInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      const val = this.value.trim();
+      if (!val) return;
+      openBrowser(val);
+      this.value = '';
+    }
+  });
+
+  /* Close browser on Escape (only when browser is open) */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const browserOpen = document.getElementById('browserOverlay').classList.contains('open');
+      if (browserOpen) {
+        closeBrowser();
+      } else {
+        closePanel();
+      }
+    }
+  });
+
+  // Init
+  loadSettings();
+</script>
+
+<script>
+  (function() {
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/gh/luminsdk/script@latest/lumin.min.js';
+    s.onload = function() { window._luminLoaded = true; };
+    document.body.appendChild(s);
+  })();
+</script>
+</body>
+</html>
